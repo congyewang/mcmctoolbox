@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import tqdm
 
 
 class MCMC:
@@ -33,7 +32,7 @@ class MCMC:
         theta_curr = self.theta_start
         log_pi_curr = self.log_pi(theta_curr)
         self.store[0,:] = theta_curr
-        for i in tqdm.trange(self.nits):
+        for i in range(self.nits):
             psi = theta_curr + epsilon * np.random.normal(size=self.d)
             log_pi_prop = self.log_pi(psi)
             log_alpha = log_pi_prop - log_pi_curr
@@ -53,7 +52,7 @@ class MCMC:
         self.store[0,:] = self.theta_start
         acc = 0
 
-        for t in tqdm.trange(1, self.nits):
+        for t in range(1, self.nits):
             p0 = np.random.randn(self.d)
             pStar = p0 + delta/2*self.grad_log_pi(self.store[t-1,:])
             xStar = self.store[t-1,:] + delta*pStar
@@ -92,7 +91,7 @@ class MCMC:
         log_q = lambda x, y: -np.log(np.sqrt((2*np.pi)**np.linalg.matrix_rank(var)*np.linalg.det(var))) - 0.5 * (y-mu(x)) @ np.linalg.inv(var) @ (y-mu(x))
         log_alpha = lambda x, y: self.log_pi(y) - self.log_pi(x) + log_q(y,x) - log_q(x,y) # log acceptance ratio (x -> y)
 
-        for i in tqdm.trange(self.nits):
+        for i in range(self.nits):
             x_proposed = mu(x[i, :]) + np.random.randn(self.d) @ np.sqrt(var)
             if np.log(np.random.uniform(0, 1)) < log_alpha(x[i, :], x_proposed):
                 x[i+1, :] = x_proposed
@@ -112,7 +111,7 @@ class MCMC:
 
         taming = lambda g, epsilon: g/(1. + epsilon*np.linalg.norm(g))
 
-        for i in tqdm.trange(self.nits):
+        for i in range(self.nits):
             self.store[i,:] = x
             U_x, grad_U_x = -self.log_pi(x), -self.grad_log_pi(x)
             tamed_gUx = taming(grad_U_x, epsilon)
@@ -136,7 +135,7 @@ class MCMC:
 
         taming = lambda g, step: np.divide(g, 1. + step * np.absolute(g))
 
-        for i in tqdm.trange(self.nits):
+        for i in range(self.nits):
             self.store[i,:] = x
             U_x, grad_U_x = -self.log_pi(x), -self.grad_log_pi(x)
             tamed_gUx = taming(grad_U_x, epsilon)
