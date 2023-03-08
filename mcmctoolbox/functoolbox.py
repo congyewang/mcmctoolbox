@@ -66,3 +66,45 @@ def comp_wksd(X, grad_log_p, Sigma):
     wksd = res.fun
 
     return wksd
+
+def discretesample(p, n):
+    """
+    Samples from a discrete distribution
+    """
+    # Parse and verify input arguments
+    assert np.issubdtype(p.dtype, np.floating), \
+        'p should be an numpy array with floating-point value type.'
+    assert np.isscalar(n) and isinstance(n, int) and n >= 0, \
+        'n should be a non-negative integer scalar.'
+
+    # Process p if necessary
+    p = p.ravel()
+
+    # Construct the bins
+    edges = np.concatenate(([0], np.cumsum(p)))
+    s = edges[-1]
+    if abs(s - 1) > np.finfo(p.dtype).eps:
+        edges = edges * (1 / s)
+
+    # Draw bins
+    rv = np.random.rand(n)
+    c = np.histogram(rv, edges)[0]
+    ce = c[-1]
+    c = c[:-1]
+    c[-1] += ce
+
+    # Extract samples
+    xv = np.nonzero(c)[0]
+    if xv.size == n:  # each value is sampled at most once
+        x = xv
+    else:             # some values are sampled more than once
+        xc = c[xv]
+        dv = np.diff(xv, prepend=xv[0])
+        dp = np.concatenate(([0], np.cumsum(xc[:-1])))
+        d = np.zeros(n, dtype=int)
+        d[dp] = dv
+        x = np.cumsum(d)
+
+    # Randomly permute the sample's order
+    x = np.random.permutation(x)
+    return x
