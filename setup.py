@@ -3,11 +3,11 @@ from setuptools import setup
 
 setup(
     name='mcmctoolbox',
-    version='0.6',
+    version='0.7',
     description='MH, HMC, MALA, tMALA, tMALA/c, KSD',
     url='https://github.com/congyewang/mcmctoolbox',
     author='Congye Wang',
     license='GPLv3+',
     packages=['mcmctoolbox'],
-    install_requires=['numpy', 'matplotlib', 'scipy', 'stein_thinning']
+    install_requires=['cvxopt', 'numpy', 'matplotlib', 'stein_thinning']
     )
