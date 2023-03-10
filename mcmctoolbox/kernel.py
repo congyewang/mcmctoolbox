@@ -1,7 +1,8 @@
+import numpy as np
 import jax.numpy as jnp
 from jax import jacfwd, jit, random, vmap
-import jax
 from itertools import product
+from cvxopt import matrix, solvers
 
 
 def make_kp(k, p):
@@ -20,7 +21,7 @@ def vectorized_kp(**kwargs):
     Vectorized Kernel Stein Discrepancy
     """
     k_p = make_kp(k=kwargs['k'], p=kwargs['p'])
-    k_p_v = lambda x,y : jax.vmap(k_p, in_axes=0, out_axes=0)(x, y)
+    k_p_v = lambda x,y : vmap(k_p, in_axes=0, out_axes=0)(x, y)
     return k_p_v
 
 def cartesian_product(a, b):
@@ -102,3 +103,30 @@ def discretesample(p, n, key=random.PRNGKey(0)):
     # Randomly permute the sample's order
     x = random.permutation(key, x)
     return x
+
+def comp_wksd(X, **kwargs):
+    """
+    Computing Weighted Kernel Stein Discrepancy
+    """
+    # remove duplicates
+    X = np.unique(X)
+
+    # dimensions
+    n = len(X)
+
+    # Stein kernel matrix
+    K = k_mat(X, k=kwargs['k'], p=kwargs['p'])
+
+    P = matrix(np.asarray(K, dtype=np.float64))
+    q = matrix(np.zeros(n))
+    G = matrix(np.diag([-1.0]*n))
+    h = matrix(np.ones(n))
+    A = matrix(np.ones((1,n)))
+    b = matrix(1.0)
+
+    solvers.options['show_progress'] = False
+    sol = solvers.qp(P, q, G, h, A, b)
+
+    w = np.array(sol['x']).flatten()
+    wksd = np.sqrt(w @ K @ w)
+    return jnp.array(wksd)

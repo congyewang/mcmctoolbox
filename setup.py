@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='mcmctoolbox',
-    version='0.71',
+    version='0.8',
     description='MH, HMC, MALA, tMALA, tMALA/c, KSD',
     url='https://github.com/congyewang/mcmctoolbox',
     author='Congye Wang',
