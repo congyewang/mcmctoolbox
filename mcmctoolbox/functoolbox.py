@@ -48,7 +48,7 @@ def strat_sample(x_grid, P_grid, n_max):
 
     return X_P
 
-def comp_wksd_cvxopt(X, grad_log_p, Sigma):
+def comp_wksd(X, grad_log_p, Sigma):
     """
     Computing Weighted Kernel Stein Discrepancy
     """
