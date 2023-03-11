@@ -1,6 +1,6 @@
 import numpy as np
 from stein_thinning.kernel import vfk0_imq
-from cvxopt import matrix, solvers
+from scipy.optimize import minimize
 
 
 def cartesian_cross_product(x,y):
@@ -61,18 +61,11 @@ def comp_wksd(X, grad_log_p, Sigma):
     # Stein kernel matrix
     K = k_mat(X, grad_log_p, Sigma)
 
-    P = matrix(K)
-    q = matrix(np.zeros(n))
-    G = matrix(np.diag([-1.0]*n))
-    h = matrix(np.ones(n))
-    A = matrix(np.ones((1,n)))
-    b = matrix(1.0)
+    cons = [{'type': 'eq', 'fun': lambda w: np.sum(w) - 1}]
+    bounds = [(0, None) for _ in range(n)]
+    res = minimize(lambda w: np.sqrt(np.dot(w.T, np.dot(K, w))), np.ones(n)/n, method='SLSQP', bounds=bounds, constraints=cons, options={'disp': False})
+    wksd = res.fun
 
-    solvers.options['show_progress'] = False
-    sol = solvers.qp(P, q, G, h, A, b)
-
-    w = np.array(sol['x']).flatten()
-    wksd = np.sqrt(w @ K @ w)
     return wksd
 
 def discretesample(p, n):

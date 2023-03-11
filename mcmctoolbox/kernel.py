@@ -2,7 +2,7 @@ import numpy as np
 import jax.numpy as jnp
 from jax import jacfwd, jit, random, vmap
 from itertools import product
-from cvxopt import matrix, solvers
+from scipy.optimize import minimize
 
 
 def make_kp(k, p):
@@ -117,16 +117,10 @@ def comp_wksd(X, **kwargs):
     # Stein kernel matrix
     K = k_mat(X, k=kwargs['k'], p=kwargs['p'])
 
-    P = matrix(np.asarray(K, dtype=np.float64))
-    q = matrix(np.zeros(n))
-    G = matrix(np.diag([-1.0]*n))
-    h = matrix(np.ones(n))
-    A = matrix(np.ones((1,n)))
-    b = matrix(1.0)
+    K = np.asarray(K, dtype=np.float64)
+    cons = [{'type': 'eq', 'fun': lambda w: np.sum(w) - 1}]
+    bounds = [(0, None) for _ in range(n)]
+    res = minimize(lambda w: np.sqrt(np.dot(w.T, np.dot(K, w))), np.ones(n)/n, method='SLSQP', bounds=bounds, constraints=cons, options={'disp': False})
+    wksd = res.fun
 
-    solvers.options['show_progress'] = False
-    sol = solvers.qp(P, q, G, h, A, b)
-
-    w = np.array(sol['x']).flatten()
-    wksd = np.sqrt(w @ K @ w)
     return jnp.array(wksd)
