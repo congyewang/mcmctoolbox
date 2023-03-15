@@ -63,7 +63,7 @@ def strat_sample(x_grid, P_grid, n_max):
 
     return X_P
 
-def discretesample(p, n, key=random.PRNGKey(0)):
+def discretesample(p, n, key):
     """
     Samples from a discrete distribution
     """
