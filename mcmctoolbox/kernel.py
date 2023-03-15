@@ -67,6 +67,7 @@ def discretesample(p, n, key=random.PRNGKey(0)):
     """
     Samples from a discrete distribution
     """
+    uniform_key, permutation_key = random.split(key)
     # Parse and verify input arguments
     assert jnp.issubdtype(p.dtype, jnp.floating), \
         'p should be an jax array with floating-point value type.'
@@ -82,7 +83,7 @@ def discretesample(p, n, key=random.PRNGKey(0)):
     if abs(s - 1) > jnp.finfo(p.dtype).eps:
         edges = edges * (1 / s)
     # Draw bins
-    rv = random.uniform(key, shape=(n,))
+    rv = random.uniform(uniform_key, shape=(n,))
     c = jnp.histogram(rv, edges)[0]
     ce = c[-1]
     c = c[:-1]
@@ -101,7 +102,7 @@ def discretesample(p, n, key=random.PRNGKey(0)):
         x = jnp.cumsum(d)
 
     # Randomly permute the sample's order
-    x = random.permutation(key, x)
+    x = random.permutation(permutation_key, x)
     return x
 
 def comp_wksd(X, **kwargs):
