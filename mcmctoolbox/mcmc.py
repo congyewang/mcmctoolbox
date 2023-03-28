@@ -8,11 +8,11 @@ class MCMC:
         self.theta_start = theta_start
         self.log_pi = log_pi
         self.grad_log_pi = grad_log_pi
+        self.d = theta_start.size
 
         if Sigma is None:
-            self.Sigma = np.eye(theta_start.size)
+            self.Sigma = np.eye(self.d)
 
-        self.d = theta_start.size
         self.store = np.zeros((self.nits+1, self.d))
         self.acc = 0.0
 
