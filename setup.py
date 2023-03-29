@@ -9,5 +9,5 @@ setup(
     author='Congye Wang',
     license='GPLv3+',
     packages=['mcmctoolbox'],
-    install_requires=['matplotlib', 'numpy', 'scipy', 'stein_thinning']
+    install_requires=['matplotlib', 'numpy', 'scipy', 'seaborn', 'stein_thinning']
     )

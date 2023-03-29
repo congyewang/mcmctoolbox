@@ -1,6 +1,7 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 class MCMC:
@@ -176,25 +177,20 @@ class MCMC:
             self.store[i+1] = theta_curr
         self.acc = nacc / self.nits
 
-    def plot(self, density=True):
+    def plot(self, num_bins=50):
         if self.d == 1:
-            plt.plot(self.store, color='black', linewidth=0.7, alpha=0.2, marker='.', linestyle='solid')
+            _, ax = plt.subplots(1, 2)
+            ax[0].plot(self.store[:, 0], color='black', linewidth=0.7, alpha=0.2, marker='.', linestyle='solid')
+            ax[1].hist(self.store[:, 0], num_bins, stacked=True, edgecolor="white", facecolor='red', alpha=0.5)
             plt.show()
-
-            if density:
-                num_bins = 50
-                plt.hist(self.store, num_bins, stacked=True, edgecolor="white", alpha=0.5)
-                plt.show()
-
         elif self.d == 2:
-            plt.plot(self.store[:,0], self.store[:,1], color='black', linewidth=0.7, alpha=0.2, marker='.', linestyle='solid')
+            g = sns.jointplot(x=self.store[:,0], y=self.store[:,1], linewidth=0.7, alpha=0.2)
+            g.plot_joint(sns.kdeplot, color="r", zorder=0, levels=6)
+            g.plot_marginals(sns.rugplot, color="r", height=-.15, clip_on=False)
             plt.show()
-
-            if density:
-                num_bins = 50
-                plt.hist(self.store[:,0], num_bins, stacked=True, edgecolor="white", facecolor='green', alpha=0.5)
-                plt.hist(self.store[:,1], num_bins, stacked=True, edgecolor="white", facecolor='red', alpha=0.5)
-                plt.show()
-
         else:
-            raise ValueError("Larger than 2D")
+            _, ax = plt.subplots(self.d, 2)
+            for i in range(self.d):
+                ax[i, 0].plot(self.store[:, i], color='black', linewidth=0.7, alpha=0.2, marker='.', linestyle='solid')
+                ax[i, 1].hist(self.store[:, i], num_bins, stacked=True, edgecolor="white", facecolor='red', alpha=0.5)
+            plt.show()
