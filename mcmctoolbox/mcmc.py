@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import multivariate_normal
 
 
 class MCMC:
@@ -50,7 +51,7 @@ class MCMC:
         Hamiltonian Monte Carlo Algorithm
         """
         self.store[0,:] = self.theta_start
-        acc = 0
+        nacc = 0
 
         for t in range(1, self.nits):
             p0 = np.random.randn(self.d)
@@ -73,34 +74,39 @@ class MCMC:
 
             if np.log(np.random.uniform(0,1)) < log_alpha:
                 self.store[t,:] = xStar
-                acc += 1
-            else:
-                self.store[t,:] = self.store[t-1,:]
-        nacc = acc / self.nits
-
-    def mala(self, epsilon=0.002):
-        """
-        Metropolis-Adjusted Langevin Algorithm
-        """
-        x = np.zeros((self.nits+1,self.d))
-        x[0, :] = self.theta_start  # initial state for MCMC
-        nacc = 0
-
-        mu = lambda x: x + epsilon * self.grad_log_pi(x) # proposal mean
-        var = 2 * epsilon * np.eye(self.d) # proposal variance
-        log_q = lambda x, y: -np.log(np.sqrt((2*np.pi)**np.linalg.matrix_rank(var)*np.linalg.det(var))) - 0.5 * (y-mu(x)) @ np.linalg.inv(var) @ (y-mu(x))
-        log_alpha = lambda x, y: self.log_pi(y) - self.log_pi(x) + log_q(y,x) - log_q(x,y) # log acceptance ratio (x -> y)
-
-        for i in range(self.nits):
-            x_proposed = mu(x[i, :]) + np.random.randn(self.d) @ np.sqrt(var)
-            if np.log(np.random.uniform(0, 1)) < log_alpha(x[i, :], x_proposed):
-                x[i+1, :] = x_proposed
                 nacc += 1
             else:
-                x[i+1, :] = x[i, :]
-
+                self.store[t,:] = self.store[t-1,:]
         self.acc = nacc / self.nits
-        self.store = x
+
+    def mala(self, epsilon=0.1, *args):
+        nacc = 0
+        theta_curr = self.theta_start
+        log_pi_curr = self.log_pi(theta_curr, *args)
+        grad_log_pi_curr = self.grad_log_pi(theta_curr, *args)
+        mu_from_theta = theta_curr + epsilon**2/2 * np.dot(self.Sigma, grad_log_pi_curr)
+
+        self.store[0,:] = theta_curr
+
+        for i in range(self.nits):
+            psi = multivariate_normal.rvs(mu_from_theta, epsilon**2 * self.Sigma)
+
+            log_pi_prop = self.log_pi(psi, *args)
+            grad_log_pi_prop = self.grad_log_pi(psi, *args)
+            mu_from_psi = psi + epsilon**2/2 * np.dot(self.Sigma, grad_log_pi_prop)
+
+            lq_theta_to_psi = multivariate_normal.logpdf(psi, mu_from_theta, epsilon**2 * self.Sigma)
+            lq_psi_to_theta = multivariate_normal.logpdf(theta_curr, mu_from_psi, epsilon**2 * self.Sigma)
+
+            log_alpha = log_pi_prop + lq_psi_to_theta - log_pi_curr - lq_theta_to_psi
+            if np.log(np.random.uniform(0, 1)) < log_alpha:
+                theta_curr = psi
+                log_pi_curr = log_pi_prop
+                grad_log_pi_curr = grad_log_pi_prop
+                mu_from_theta = mu_from_psi
+                nacc += 1
+            self.store[i+1,:] = theta_curr
+        self.acc = nacc / self.nits
 
     def tmala(self, epsilon=0.01):
         """
