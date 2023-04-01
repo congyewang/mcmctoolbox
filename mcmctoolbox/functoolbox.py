@@ -109,3 +109,15 @@ def discretesample(p, n):
     # Randomly permute the sample's order
     x = np.random.permutation(x)
     return x
+
+def flat(nested_list):
+    """
+    Expand nested list
+    """
+    res = []
+    for i in nested_list:
+        if isinstance(i, list):
+            res.extend(flat(i))
+        else:
+            res.append(i)
+    return res
