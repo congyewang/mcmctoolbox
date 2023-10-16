@@ -177,6 +177,27 @@ class MCMC:
             self.store[i+1] = theta_curr
         self.acc = nacc / self.nits
 
+    def simulated_annealing_mcmc(self, initial_temp=10, cooling_rate=0.999, epsilon=1.0):
+        nacc = 0
+        theta_curr = self.theta_start
+        log_pi_curr = self.log_pi(theta_curr)
+        self.store[0,:] = theta_curr
+        current_temp = initial_temp
+
+        for i in range(self.nits):
+            psi = theta_curr + epsilon * np.random.normal(size=self.d)
+            log_pi_prop = self.log_pi(psi)
+            log_alpha = min(0, (log_pi_prop - log_pi_curr)/current_temp)
+            if np.log(np.random.uniform()) < log_alpha:
+                theta_curr = psi
+                log_pi_curr = log_pi_prop
+                nacc += 1
+
+            self.store[i+1,:] = theta_curr
+            current_temp *= cooling_rate
+
+        self.acc = nacc/self.nits
+
     def plot(self, num_bins=50):
         if self.d == 1:
             _, ax = plt.subplots(1, 2)
