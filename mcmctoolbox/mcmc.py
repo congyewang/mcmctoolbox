@@ -155,27 +155,6 @@ class MCMC:
                 nacc += 1
         self.acc = nacc / self.nits
 
-    def q_invariant_mala(self, grad_log_kp, epsilon=1.0):
-        """
-        Q-Invariant MALA
-        """
-        nacc = 0
-        theta_curr = self.theta_start
-        self.store[0,:] = theta_curr
-
-        m = lambda x: epsilon * self.grad_log_pi(x) + (epsilon/2) * grad_log_kp(x)
-
-        for i in range(self.nits):
-            theta_star = theta_curr + m(theta_curr) + np.sqrt(2 * epsilon) * np.random.normal(size=self.d)
-            log_alpha = self.log_pi(theta_star) - self.log_pi(theta_curr) + 0.5 * (grad_log_kp(theta_star) - grad_log_kp(theta_curr)) - (1/(4*epsilon)) * (np.linalg.norm(theta_curr - m(theta_star), 2)) + (1/(4*epsilon)) * (np.linalg.norm(theta_star - m(theta_curr), 2))
-            if np.log(np.random.uniform(0, 1)) < log_alpha:
-                theta_curr = theta_star
-                nacc += 1
-            else:
-                theta_curr = theta_curr
-            self.store[i+1] = theta_curr
-        self.acc = nacc / self.nits
-
     def simulated_annealing_mcmc(self, initial_temp=10, cooling_rate=0.999, epsilon=1.0):
         """
         Simulated Annealing MH
