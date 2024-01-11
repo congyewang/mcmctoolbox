@@ -166,10 +166,21 @@ def nearestPD(A):
 
 def isPD(B):
     """
-    Returns true when input is positive-definite, via Cholesky
+    Returns true when input is positive-definite, via Cholesky and det
     """
     try:
         _ = np.linalg.cholesky(B)
-        return True
+        res_cholesky =  True
     except np.linalg.LinAlgError:
-        return False
+        res_cholesky = False
+
+    try:
+        assert np.linalg.det(B) > 0, "Determinant is negative"
+        res_det = True
+    except AssertionError:
+        res_det = False
+
+    res = res_cholesky and res_det
+
+    return res
+
