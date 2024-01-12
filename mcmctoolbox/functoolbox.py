@@ -1,6 +1,8 @@
+import re
 import numpy as np
 from stein_thinning.kernel import vfk0_imq
 from scipy.optimize import minimize
+from scipy.stats._multivariate import _PSD
 
 
 def cartesian_cross_product(x,y):
@@ -166,7 +168,7 @@ def nearestPD(A):
 
 def isPD(B):
     """
-    Returns true when input is positive-definite, via Cholesky and det
+    Returns true when input is positive-definite, via Cholesky, det, and _PSD from scipy.
     """
     try:
         _ = np.linalg.cholesky(B)
@@ -180,7 +182,15 @@ def isPD(B):
     except AssertionError:
         res_det = False
 
-    res = res_cholesky and res_det
+    try:
+        _PSD(B)
+        res_PSD = True
+    except ValueError as e:
+        if str(e) == re.search("[Pp]ositive", str(e)):
+            return False
+        else:
+            raise
+
+    res = res_cholesky and res_det and res_PSD
 
     return res
-
