@@ -186,7 +186,7 @@ def isPD(B):
         _PSD(B, allow_singular=False)
         res_PSD = True
     except Exception as e:
-        if str(e) == re.search("[Pp]ositive", str(e)):
+        if re.search("[Pp]ositive", str(e)):
             return False
         else:
             raise
