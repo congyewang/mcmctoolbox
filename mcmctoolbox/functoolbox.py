@@ -183,9 +183,9 @@ def isPD(B):
         res_det = False
 
     try:
-        _PSD(B)
+        _PSD(B, allow_singular=False)
         res_PSD = True
-    except ValueError as e:
+    except Exception as e:
         if str(e) == re.search("[Pp]ositive", str(e)):
             return False
         else:
