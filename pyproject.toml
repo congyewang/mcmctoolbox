@@ -1,0 +1,31 @@
+[project]
+name = "mcmctoolbox"
+version = "0.16.0"
+description = "MCMC Algorithms"
+authors = [
+    { name = "Congye Wang", email = "congye.wang@outlook.com" }
+]
+dependencies = [
+    "numpy>=2.0.1",
+    "scipy>=1.14.0",
+    "matplotlib>=3.9.2",
+    "seaborn>=0.13.2",
+    "jax>=0.4.31",
+    "stein-thinning @ git+https://github.com/wilson-ye-chen/stein_thinning",
+]
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcmctoolbox"]
