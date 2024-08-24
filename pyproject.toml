@@ -11,7 +11,7 @@ dependencies = [
     "matplotlib>=3.9.2",
     "seaborn>=0.13.2",
     "jax>=0.4.31",
-    "stein-thinning @ git+https://github.com/wilson-ye-chen/stein_thinning",
+    "stein-thinning>=0.1.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"

@@ -64,7 +64,7 @@ seaborn==0.13.2
     # via mcmctoolbox
 six==1.16.0
     # via python-dateutil
-stein-thinning @ git+https://github.com/wilson-ye-chen/stein_thinning@342bbfa99f6996ac0f9be1ae47f373a8935786ff
+stein-thinning==0.1.0
     # via mcmctoolbox
 tzdata==2024.1
     # via pandas
