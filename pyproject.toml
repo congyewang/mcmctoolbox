@@ -1,31 +1,20 @@
 [project]
 name = "mcmctoolbox"
-version = "0.16.0"
+version = "0.17.0"
 description = "MCMC Algorithms"
-authors = [
-    { name = "Congye Wang", email = "congye.wang@outlook.com" }
-]
-dependencies = [
-    "numpy>=2.0.1",
-    "scipy>=1.14.0",
-    "matplotlib>=3.9.2",
-    "seaborn>=0.13.2",
-    "jax>=0.4.31",
-    "stein-thinning>=0.1.0",
-]
 readme = "README.md"
-requires-python = ">= 3.8"
+requires-python = ">=3.12"
+dependencies = [
+    "jax>=0.4.38",
+    "matplotlib>=3.10.0",
+    "scipy>=1.14.1",
+    "seaborn>=0.13.2",
+    "stein-thinning>=0.2.0",
+]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.rye]
-managed = true
-dev-dependencies = []
-
-[tool.hatch.metadata]
-allow-direct-references = true
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/mcmctoolbox"]
+[tool.setuptools]
+license-files = ["LICENSE"]
