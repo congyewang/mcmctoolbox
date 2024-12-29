@@ -1,15 +1,16 @@
 [project]
 name = "mcmctoolbox"
-version = "0.17.0"
+version = "0.18.0"
 description = "MCMC Algorithms"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
     "jax>=0.4.38",
     "matplotlib>=3.10.0",
     "scipy>=1.14.1",
     "seaborn>=0.13.2",
     "stein-thinning>=0.2.0",
+    "tqdm>=4.67.1",
 ]
 
 [build-system]
