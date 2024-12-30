@@ -413,6 +413,9 @@ class FisherAdaptiveLangevinMetropolisHastings(MetropolisAdjustedLangevinAlgorit
             mean (npt.NDArray[np.floating]): Mean.
             sigma2 (npt.NDArray[np.floating]): Square of Step Size in Covariance Matrix.
             grad_log_target_mean (npt.NDArray[np.floating]): Gradient.
+
+        Returns:
+            np.floating: Log correction term.
         """
         diff = x - mean - (sigma2 / 4) * grad_log_target_mean
         return 0.5 * np.dot(diff, grad_log_target_mean)

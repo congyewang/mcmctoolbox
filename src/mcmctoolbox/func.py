@@ -1,29 +1,63 @@
 import re
+from typing import List, TypeVar, Union
 
 import numpy as np
+from numpy import typing as npt
 from scipy.optimize import minimize
 from scipy.stats._multivariate import _PSD
 from stein_thinning.kernel import vfk0_imq
 
-
-def cartesian_cross_product(x, y):
-    """
-    Cartesian Product
-    """
-    cross_product = np.transpose([np.tile(x, len(y)), np.repeat(y, len(x))])
-    return cross_product
+T = TypeVar("T")
+NestedList = List[Union[int, "NestedList"]]
 
 
-def k0xx(sx, linv):
+def cartesian_cross_product(
+    x: npt.NDArray[np.floating], y: npt.NDArray[np.floating]
+) -> npt.NDArray[np.floating]:
     """
-    Stein IMQ kernel, k_p(x,x)
+    Cartesian Product of two arrays x and y.
+
+    Args:
+        x (npt.NDArray[np.floating]): 1D array
+        y (npt.NDArray[np.floating]): 1D array
+
+    Returns:
+        npt.NDArray[np.floating]: 2D array
+    """
+    return np.transpose([np.tile(x, len(y)), np.repeat(y, len(x))])
+
+
+def k0xx(
+    sx: npt.NDArray[np.floating], linv: npt.NDArray[np.floating]
+) -> npt.NDArray[np.floating]:
+    """
+    Stein IMQ kernel, k_p(x,x) = 1 + ||Sx||^2.
+
+    Args:
+        sx (npt.NDArray[np.floating]): Gradient of log p(x)
+        linv (npt.NDArray[np.floating]): Inverse of the Cholesky decomposition of the covariance matrix
+
+    Returns:
+        npt.NDArray[np.floating]: Kernel matrix
     """
     return np.trace(linv) + np.sum(sx**2, axis=1)
 
 
-def k_mat(x, grad_log_p, linv):
+def k_mat(
+    x: npt.NDArray[np.floating],
+    grad_log_p: npt.NDArray[np.floating],
+    linv: npt.NDArray[np.floating],
+) -> npt.NDArray[np.floating]:
     """
-    KSD Matrix
+    KSD Matrix for a given x.
+
+    Args:
+        x (npt.NDArray[np.floating]): 1D array
+        grad_log_p (Callable): Gradient of log p(x)
+        linv (npt.NDArray[np.floating]): Inverse of the Cholesky decomposition of the covariance matrix
+
+    Returns:
+        npt.NDArray[np.floating]: Kernel matrix
     """
     x1 = np.tile(x, len(x)).reshape(-1, 1)
     x2 = np.repeat(x, len(x)).reshape(-1, 1)
@@ -31,12 +65,23 @@ def k_mat(x, grad_log_p, linv):
     sx2 = grad_log_p(x2)
     res_array = vfk0_imq(x1, x2, sx1, sx2, linv)
     res_mat = res_array.reshape(x.size, x.size)
+
     return res_mat
 
 
-def strat_sample(x_grid, P_grid, n_max):
+def strat_sample(
+    x_grid: npt.NDArray[np.floating], P_grid: npt.NDArray[np.floating], n_max: int
+) -> npt.NDArray[np.floating]:
     """
-    Stratified Sampling
+    Stratified Sampling from a discrete distribution.
+
+    Args:
+        x_grid (npt.NDArray[np.floating]): 1D array
+        P_grid (npt.NDArray[np.floating]): 1D array
+        n_max (int): Maximum number of samples
+
+    Returns:
+        npt.NDArray[np.floating]: Stratified samples
     """
     # Ensure P_grid is normalised
     P_grid = P_grid / np.sum(P_grid)
@@ -55,9 +100,21 @@ def strat_sample(x_grid, P_grid, n_max):
     return X_P
 
 
-def comp_wksd(X, grad_log_p, Sigma):
+def comp_wksd(
+    X: npt.NDArray[np.floating],
+    grad_log_p: npt.NDArray[np.floating],
+    Sigma: npt.NDArray[np.floating],
+):
     """
-    Computing Weighted Kernel Stein Discrepancy
+    Computing Weighted Kernel Stein Discrepancy (WKSD) for a given X.
+
+    Args:
+        X (npt.NDArray[np.floating]): 1D array
+        grad_log_p (Callable): Gradient of log p(x)
+        Sigma (npt.NDArray[np.floating]): Covariance matrix
+
+    Returns:
+        float: WKSD
     """
     # remove duplicates
     X = np.unique(X)
@@ -83,9 +140,16 @@ def comp_wksd(X, grad_log_p, Sigma):
     return wksd
 
 
-def discretesample(p, n):
+def discretesample(p: npt.NDArray[np.floating], n: int) -> npt.NDArray[np.floating]:
     """
-    Samples from a discrete distribution
+    Samples from a discrete distribution with probabilities p.
+
+    Args:
+        p (npt.NDArray[np.floating]): Probabilities
+        n (int): Number of samples
+
+    Returns:
+        npt.NDArray[np.floating]: Samples
     """
     # Parse and verify input arguments
     assert np.issubdtype(
@@ -128,9 +192,15 @@ def discretesample(p, n):
     return x
 
 
-def flat(nested_list):
+def flat(nested_list: NestedList) -> List[T]:
     """
-    Expand nested list
+    Expand nested list into a flat list.
+
+    Args:
+        nested_list (NestedList): Nested list
+
+    Returns:
+        List[T]: Flat list
     """
     res = []
     for i in nested_list:
@@ -141,7 +211,7 @@ def flat(nested_list):
     return res
 
 
-def nearestPD(A):
+def nearestPD(A: npt.NDArray[np.floating]) -> npt.NDArray[np.floating]:
     """
     Find the nearest positive-definite matrix to input
     A Python/Numpy port of John D'Errico's `nearestSPD` MATLAB code [1], which
@@ -150,6 +220,12 @@ def nearestPD(A):
     [1] https://www.mathworks.com/matlabcentral/fileexchange/42885-nearestspd
     [2] N.J. Higham, "Computing a nearest symmetric positive semidefinite
     matrix" (1988): https://doi.org/10.1016/0024-3795(88)90223-6
+
+    Args:
+        A (npt.NDArray[np.floating]): Input matrix
+
+    Returns:
+        npt.NDArray[np.floating]: Nearest positive-definite matrix
     """
 
     B = (A + A.T) / 2
@@ -184,9 +260,15 @@ def nearestPD(A):
     return A3
 
 
-def isPD(B):
+def isPD(B: npt.NDArray[np.floating]) -> bool:
     """
     Returns true when input is positive-definite, via Cholesky, det, and _PSD from scipy.
+
+    Args:
+        B (npt.NDArray[np.floating]): Input matrix
+
+    Returns:
+        bool: True if positive-definite, False otherwise
     """
     try:
         _ = np.linalg.cholesky(B)

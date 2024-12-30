@@ -1,14 +1,26 @@
 from itertools import product
+from typing import Callable
 
 import jax.numpy as jnp
 import numpy as np
 from jax import jacfwd, jit, random, vmap
+from jaxtyping import Array
 from scipy.optimize import minimize
 
 
-def make_kp(k, p):
+def make_kp(
+    k: Callable[[Array], Array],
+    p: Callable[[Array], Array],
+) -> Callable[[Array, Array], Array]:
     """
-    Make Kernel Stein Discrepancy
+    Make Kernel Stein Discrepancy Derivative Function.
+
+    Args:
+        k (Callable[[Array], Array]): Kernel function.
+        p (Callable[[Array], Array]): Target distribution.
+
+    Returns:
+        Callable[[Array, Array], Array]: Kernel Stein Discrepancy Derivative Function.
     """
     d_log_p = jacfwd(lambda x: jnp.log(p(x)))
     dx_k = jacfwd(k, argnums=0)
@@ -23,18 +35,36 @@ def make_kp(k, p):
     return k_p
 
 
-def vectorized_kp(**kwargs):
+def vectorized_kp(
+    k: Callable[[Array], Array],
+    p: Callable[[Array], Array],
+) -> Callable[[Array, Array], Array]:
     """
-    Vectorized Kernel Stein Discrepancy
+    Vectorized Kernel Stein Discrepancy Derivative Function.
+
+    Args:
+        k (Callable[[Array], Array]): Kernel function.
+        p (Callable[[Array], Array]): Target distribution.
+
+    Returns:
+        Callable[[Array, Array], Array]: Vectorized Kernel Stein Discrepancy Derivative Function.
     """
-    k_p = make_kp(k=kwargs["k"], p=kwargs["p"])
+    k_p = make_kp(k=k, p=p)
     k_p_v = lambda x, y: vmap(k_p, in_axes=0, out_axes=0)(x, y)
+
     return k_p_v
 
 
-def cartesian_product(a, b):
+def cartesian_product(a: Array, b: Array) -> Array:
     """
-    Cartesian Cross Product in 1D
+    Cartesian Cross Product in 1D arrays.
+
+    Args:
+        a (Array): 1D array.
+        b (Array): 1D array.
+
+    Returns:
+        Array: Cartesian Cross Product.
     """
     # Reshape input matrices to vectors
     a_vec = jnp.reshape(a, (-1,))
@@ -46,19 +76,44 @@ def cartesian_product(a, b):
     return result.reshape(-1, 2)
 
 
-def k_mat(x, **kwargs):
+def k_mat(
+    x: Array,
+    k: Callable[[Array], Array],
+    p: Callable[[Array], Array],
+) -> Array:
     """
-    KSD Matrix
+    KSD Matrix for a given kernel and target distribution function p.
+
+    Args:
+        x (Array): 1D array.
+        k (Callable[[Array], Array]): Kernel function.
+        p (Callable[[Array], Array]): Target distribution.
+
+    Returns:
+        Array: KSD Matrix.
     """
-    kp_v = jit(vectorized_kp(k=kwargs["k"], p=kwargs["p"]))
+    kp_v = jit(vectorized_kp(k=k, p=p))
     xx = jnp.array(list(product(x, x)))
     res = kp_v(xx[:, 0], xx[:, 1])
+
     return res.reshape(x.size, x.size)
 
 
-def strat_sample(x_grid, P_grid, n_max):
+def strat_sample(
+    x_grid: Array,
+    P_grid: Array,
+    n_max: int,
+) -> Array:
     """
-    Stratified Sampling
+    Stratified Sampling from a Discrete Distribution P_grid.
+
+    Args:
+        x_grid (Array): Grid of values.
+        P_grid (Array): Discrete distribution.
+        n_max (int): Number of samples.
+
+    Returns:
+        Array: Stratified Sample.
     """
     # Ensure P_grid is normalised
     P_grid = P_grid / jnp.sum(P_grid)
@@ -74,9 +129,21 @@ def strat_sample(x_grid, P_grid, n_max):
     return X_P
 
 
-def discretesample(p, n, key):
+def discretesample(
+    p: Array,
+    n: int,
+    key: Array,
+) -> Array:
     """
-    Samples from a discrete distribution
+    Samples from a discrete distribution with probabilities p.
+
+    Args:
+        p (Array): Probability mass function.
+        n (int): Number of samples.
+        key (Array): Random key.
+
+    Returns:
+        Array: Samples from a discrete distribution.
     """
     uniform_key, permutation_key = random.split(key)
     # Parse and verify input arguments
@@ -119,9 +186,21 @@ def discretesample(p, n, key):
     return x
 
 
-def comp_wksd(X, **kwargs):
+def comp_wksd(
+    X: Array,
+    k: Callable[[Array], Array],
+    p: Callable[[Array], Array],
+) -> Array:
     """
-    Computing Weighted Kernel Stein Discrepancy
+    Computing Weighted Kernel Stein Discrepancy (WKSD) for a given kernel and target distribution function p.
+
+    Args:
+        X (Array): 1D array.
+        k (Callable[[Array], Array]): Kernel function.
+        p (Callable[[Array], Array]): Target distribution.
+
+    Returns:
+        Array: Weighted Kernel Stein Discrepancy.
     """
     # remove duplicates
     X = np.unique(X)
@@ -130,7 +209,7 @@ def comp_wksd(X, **kwargs):
     n = len(X)
 
     # Stein kernel matrix
-    K = k_mat(X, k=kwargs["k"], p=kwargs["p"])
+    K = k_mat(X, k=k, p=p)
 
     K = np.asarray(K, dtype=np.float64)
     cons = [{"type": "eq", "fun": lambda w: np.sum(w) - 1}]
