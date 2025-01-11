@@ -13,7 +13,7 @@ class MCMCAlgorithmBase(ABC):
     def __init__(
         self,
         log_target_pdf: Callable[[npt.NDArray[np.floating]], npt.NDArray[np.floating]],
-        init_sample: npt.NDArray[np.floating],
+        initial_sample: npt.NDArray[np.floating],
         covariance: Optional[npt.NDArray[np.floating]] = None,
         nits: int = 5_000,
         verbose: bool = True,
@@ -23,15 +23,15 @@ class MCMCAlgorithmBase(ABC):
 
         Args:
             log_target_pdf (Callable[[T], T]): Logarithm of the target distribution.
-            init_sample (npt.NDArray[np.floating]): Starting point of the chain.
+            initial_sample (npt.NDArray[np.floating]): Starting point of the chain.
             covariance (Optional[npt.NDArray[np.floating]], optional): Covariance matrix of the proposal distribution. Defaults to None.
             nits (int, optional): Number of iterations. Defaults to 5000.
             verbose (bool, optional): Whether to display progress bar. Defaults to True.
         """
         self.log_target_pdf = log_target_pdf
-        self.init_sample = init_sample
+        self.initial_sample = initial_sample
         self.nits = nits
-        self.sample_dim = len(init_sample)
+        self.sample_dim = len(initial_sample)
         self.verbose = verbose
 
         if covariance is None:
@@ -133,7 +133,7 @@ class RandomWalkMetropolisHastings(MCMCAlgorithmBase):
             verbose (bool, optional): Whether to display progress bar. Defaults to True.
         """
         nacc = 0
-        current_sample = self.init_sample
+        current_sample = self.initial_sample
         log_target_current = self.log_target_pdf(current_sample)
 
         self.store[0, :] = current_sample
@@ -185,7 +185,7 @@ class AdaptiveMetropolisHastings(MCMCAlgorithmBase):
         covariances = np.zeros((self.nits + 1, self.sample_dim, self.sample_dim))
         lambda_seq = np.zeros(self.nits + 1)
 
-        samples[0] = self.init_sample
+        samples[0] = self.initial_sample
         means[0] = initial_mu
         covariances[0] = self.covariance
         lambda_seq[0] = lambda_initial
@@ -231,7 +231,7 @@ class MetropolisAdjustedLangevinAlgorithm(MCMCAlgorithmBase):
         grad_log_target_pdf: Callable[
             [npt.NDArray[np.floating]], npt.NDArray[np.floating]
         ],
-        init_sample: npt.NDArray[np.floating],
+        initial_sample: npt.NDArray[np.floating],
         covariance: Optional[npt.NDArray[np.floating]] = None,
         nits: int = 5_000,
         verbose: bool = True,
@@ -242,12 +242,12 @@ class MetropolisAdjustedLangevinAlgorithm(MCMCAlgorithmBase):
         Args:
             log_target_pdf (Callable[[T], T]): Logarithm of the target distribution.
             grad_log_target_pdf (Callable[[T], T]): Gradient of the logarithm of the target distribution.
-            init_sample (npt.NDArray[np.floating]): Starting point of the chain.
+            initial_sample (npt.NDArray[np.floating]): Starting point of the chain.
             covariance (Optional[npt.NDArray[np.floating]], optional): Covariance matrix of the proposal distribution. Defaults to None.
             nits (int, optional): Number of iterations. Defaults to 5000.
             verbose (bool, optional): Whether to display progress bar. Defaults to True.
         """
-        super().__init__(log_target_pdf, init_sample, covariance, nits, verbose)
+        super().__init__(log_target_pdf, initial_sample, covariance, nits, verbose)
 
         self.grad_log_target_pdf = grad_log_target_pdf
 
@@ -259,7 +259,7 @@ class MetropolisAdjustedLangevinAlgorithm(MCMCAlgorithmBase):
             epsilon (float, optional): Step size. Defaults to 0.1.
         """
         nacc = 0
-        current_sample = self.init_sample
+        current_sample = self.initial_sample
         log_target_current = self.log_target_pdf(current_sample)
         grad_log_target_current = self.grad_log_target_pdf(current_sample)
         current_mean = current_sample + epsilon**2 / 2 * np.dot(
@@ -329,7 +329,7 @@ class TamedMetropolisAdjustedLangevinAlgorithm(MetropolisAdjustedLangevinAlgorit
             epsilon (float, optional): Step size. Defaults to 0.01.
         """
         nacc = 0
-        current_sample = self.init_sample
+        current_sample = self.initial_sample
 
         for i in trange(self.nits, disable=not self.verbose):
             self.store[i, :] = current_sample
@@ -462,7 +462,7 @@ class FisherAdaptiveLangevinMetropolisHastings(MetropolisAdjustedLangevinAlgorit
             Titsias, M. K. (2023). Optimal Preconditioning and Fisher Adaptive Langevin Sampling. arXiv preprint arXiv:2305.14442.
         """
         nacc = 0
-        current_sample = self.init_sample
+        current_sample = self.initial_sample
         sigma2 = 1.0
 
         # Run simple MALA to initialize theta_curr and sigma2
@@ -556,7 +556,7 @@ class SimulatedAnnealingMetropolisHastings(MCMCAlgorithmBase):
             epsilon (float, optional): Standard deviation of the proposal distribution. Defaults to 1.0.
         """
         nacc = 0
-        current_sample = self.init_sample
+        current_sample = self.initial_sample
         log_target_current = self.log_target_pdf(current_sample)
         self.store[0, :] = current_sample
         current_temp = initial_temp
@@ -587,7 +587,7 @@ class HamiltonianMonteCarlo(MCMCAlgorithmBase):
         grad_log_target_pdf: Callable[
             [npt.NDArray[np.floating]], npt.NDArray[np.floating]
         ],
-        init_sample: npt.NDArray[np.floating],
+        initial_sample: npt.NDArray[np.floating],
         covariance: Optional[npt.NDArray[np.floating]] = None,
         nits: int = 5_000,
         verbose: bool = True,
@@ -598,12 +598,12 @@ class HamiltonianMonteCarlo(MCMCAlgorithmBase):
         Args:
             log_target_pdf (Callable[[T], T]): Logarithm of the target distribution.
             grad_log_target_pdf (Callable[[T], T]): Gradient of the logarithm of the target distribution.
-            init_sample (npt.NDArray[np.floating]): Starting point of the chain.
+            initial_sample (npt.NDArray[np.floating]): Starting point of the chain.
             covariance (Optional[npt.NDArray[np.floating]], optional): Covariance matrix of the proposal distribution. Defaults to None.
             nits (int, optional): Number of iterations. Defaults to 5000.
             verbose (bool, optional): Whether to display progress bar. Defaults to True.
         """
-        super().__init__(log_target_pdf, init_sample, covariance, nits, verbose)
+        super().__init__(log_target_pdf, initial_sample, covariance, nits, verbose)
 
         self.grad_log_target_pdf = grad_log_target_pdf
 
@@ -616,7 +616,7 @@ class HamiltonianMonteCarlo(MCMCAlgorithmBase):
             L (int, optional): Number of leapfrog steps. Defaults to 20.
             verbose (bool, optional): Whether to display progress bar. Defaults to True.
         """
-        self.store[0, :] = self.init_sample
+        self.store[0, :] = self.initial_sample
         nacc = 0
 
         for t in trange(1, self.nits, disable=not self.verbose):
@@ -698,7 +698,7 @@ class MCMCFactory:
     def create(
         algorithm_name: str,
         log_target_pdf: Callable[[npt.NDArray[np.floating]], npt.NDArray[np.floating]],
-        init_sample: npt.NDArray[np.floating],
+        initial_sample: npt.NDArray[np.floating],
         grad_log_target_pdf: Optional[
             Callable[[npt.NDArray[np.floating]], npt.NDArray[np.floating]]
         ] = None,
@@ -712,7 +712,7 @@ class MCMCFactory:
         Args:
             algorithm_name (str): The name of the algorithm.
             log_target_pdf (Callable[[np.ndarray], float]): Logarithm of the target distribution.
-            init_sample (np.ndarray): Starting point of the chain.
+            initial_sample (np.ndarray): Starting point of the chain.
             covariance (Optional[np.ndarray]): Covariance matrix of the proposal distribution.
             nits (int, optional): Number of iterations. Defaults to 5000.
             verbose (bool, optional): Whether to display progress bar. Defaults to True.
@@ -735,7 +735,7 @@ class MCMCFactory:
             return algorithm_class(
                 log_target_pdf=log_target_pdf,
                 grad_log_target_pdf=grad_log_target_pdf,
-                init_sample=init_sample,
+                initial_sample=initial_sample,
                 covariance=covariance,
                 nits=nits,
                 verbose=verbose,
@@ -743,7 +743,7 @@ class MCMCFactory:
         else:
             return algorithm_class(
                 log_target_pdf=log_target_pdf,
-                init_sample=init_sample,
+                initial_sample=initial_sample,
                 covariance=covariance,
                 nits=nits,
                 verbose=verbose,
