@@ -73,7 +73,7 @@ class MCMCAlgorithmBase(ABC):
         """
         raise NotImplementedError("sample method is not implemented")
 
-    def plot(self, num_bins: int = 50):
+    def plot(self, num_bins: str | int = "fd") -> None:
         match self.sample_dim:
             case 1:
                 _, ax = plt.subplots(1, 2)
@@ -87,7 +87,7 @@ class MCMCAlgorithmBase(ABC):
                 )
                 ax[1].hist(
                     self.store[:, 0],
-                    num_bins,
+                    bins=num_bins,
                     stacked=True,
                     edgecolor="white",
                     facecolor="red",
@@ -99,7 +99,7 @@ class MCMCAlgorithmBase(ABC):
                     x=self.store[:, 0], y=self.store[:, 1], linewidth=0.7, alpha=0.2
                 )
                 g.plot_joint(sns.kdeplot, color="r", zorder=0, levels=6)
-                g.plot_marginals(sns.rugplot, color="r", height=-0.15, clip_on=False)
+                g.plot_marginals(sns.rugplot, color="r", clip_on=False)
                 plt.show()
             case _:
                 _, ax = plt.subplots(self.sample_dim, 2)
@@ -114,7 +114,7 @@ class MCMCAlgorithmBase(ABC):
                     )
                     ax[i, 1].hist(
                         self.store[:, i],
-                        num_bins,
+                        bins=num_bins,
                         stacked=True,
                         edgecolor="white",
                         facecolor="red",
