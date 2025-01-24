@@ -13,10 +13,23 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.x"
+
+    - name: Install Sphinx
+      run: pip install sphinx
+
+    - name: Build documentation
+      run: |
+        mkdir -p docs/build/html
+        sphinx-build -b html docs/ docs/build/html
+
     - name: Deploy to GitHub Pages
       run: |
-        mkdir public_html
-        cp -r docs/public/html/* public_html/
+        mkdir -p public_html
+        cp -r docs/build/html/* public_html/
         touch public_html/.nojekyll
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
