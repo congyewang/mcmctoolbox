@@ -21,10 +21,20 @@ jobs:
     - name: Install Sphinx
       run: pip install sphinx
 
-    - name: Build documentation
+    - name: Setup directories
       run: |
         mkdir -p docs/build/html
-        sphinx-build -b html docs/ docs/build/html
+        mkdir -p docs/source
+        
+    - name: Initialize Sphinx
+      run: |
+        if [ ! -f docs/conf.py ]; then
+            sphinx-quickstart -q -p "mcmctoolbox" -a "CongYe Wang" -v "1.0" --ext-autodoc --ext-viewcode --sourcedir=source --builddir=build docs
+        fi
+
+    - name: Build documentation
+      run: |
+        sphinx-build -b html docs/source docs/build/html
 
     - name: Deploy to GitHub Pages
       run: |
