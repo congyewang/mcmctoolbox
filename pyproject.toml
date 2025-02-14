@@ -8,6 +8,7 @@ dependencies = [
     "jax>=0.4.38",
     "jaxtyping>=0.2.36",
     "matplotlib>=3.10.0",
+    "pytest>=8.3.4",
     "scipy>=1.14.1",
     "seaborn>=0.13.2",
     "sphinx>=8.1.3",
