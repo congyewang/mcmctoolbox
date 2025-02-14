@@ -8,7 +8,7 @@ from jaxtyping import Array
 from scipy.optimize import minimize
 
 
-def make_kp(
+def make_ksd_derivative(
     k: Callable[[Array], Array],
     p: Callable[[Array], Array],
 ) -> Callable[[Array, Array], Array]:
@@ -35,7 +35,7 @@ def make_kp(
     return k_p
 
 
-def vectorized_kp(
+def vectorized_make_ksd_derivative(
     k: Callable[[Array], Array],
     p: Callable[[Array], Array],
 ) -> Callable[[Array, Array], Array]:
@@ -49,7 +49,7 @@ def vectorized_kp(
     Returns:
         Callable[[Array, Array], Array]: Vectorized Kernel Stein Discrepancy Derivative Function.
     """
-    k_p = make_kp(k=k, p=p)
+    k_p = make_ksd_derivative(k=k, p=p)
     k_p_v = lambda x, y: vmap(k_p, in_axes=0, out_axes=0)(x, y)
 
     return k_p_v
@@ -76,7 +76,7 @@ def cartesian_product(a: Array, b: Array) -> Array:
     return result.reshape(-1, 2)
 
 
-def k_mat(
+def ksd_matrix(
     x: Array,
     k: Callable[[Array], Array],
     p: Callable[[Array], Array],
@@ -92,7 +92,7 @@ def k_mat(
     Returns:
         Array: KSD Matrix.
     """
-    kp_v = jit(vectorized_kp(k=k, p=p))
+    kp_v = jit(vectorized_make_ksd_derivative(k=k, p=p))
     xx = jnp.array(list(product(x, x)))
     res = kp_v(xx[:, 0], xx[:, 1])
 
@@ -129,7 +129,7 @@ def strat_sample(
     return X_P
 
 
-def discretesample(
+def discrete_sample(
     p: Array,
     n: int,
     key: Array,
@@ -209,7 +209,7 @@ def comp_wksd(
     n = len(X)
 
     # Stein kernel matrix
-    K = k_mat(X, k=k, p=p)
+    K = ksd_matrix(X, k=k, p=p)
 
     K = np.asarray(K, dtype=np.float64)
     cons = [{"type": "eq", "fun": lambda w: np.sum(w) - 1}]

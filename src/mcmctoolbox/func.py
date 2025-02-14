@@ -27,7 +27,7 @@ def cartesian_cross_product(
     return np.transpose([np.tile(x, len(y)), np.repeat(y, len(x))])
 
 
-def k0xx(
+def stein_imq_kernel(
     sx: npt.NDArray[np.floating], linv: npt.NDArray[np.floating]
 ) -> npt.NDArray[np.floating]:
     """
@@ -43,7 +43,7 @@ def k0xx(
     return np.trace(linv) + np.sum(sx**2, axis=1)
 
 
-def k_mat(
+def ksd_matrix(
     x: npt.NDArray[np.floating],
     grad_log_p: npt.NDArray[np.floating],
     linv: npt.NDArray[np.floating],
@@ -123,7 +123,7 @@ def comp_wksd(
     n = len(X)
 
     # Stein kernel matrix
-    K = k_mat(X, grad_log_p, Sigma)
+    K = ksd_matrix(X, grad_log_p, Sigma)
 
     cons = [{"type": "eq", "fun": lambda w: np.sum(w) - 1}]
     bounds = [(0, None) for _ in range(n)]
@@ -140,7 +140,7 @@ def comp_wksd(
     return wksd
 
 
-def discretesample(p: npt.NDArray[np.floating], n: int) -> npt.NDArray[np.floating]:
+def discrete_sample(p: npt.NDArray[np.floating], n: int) -> npt.NDArray[np.floating]:
     """
     Samples from a discrete distribution with probabilities p.
 

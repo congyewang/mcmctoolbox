@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Dict, List, Optional, Type, TypeVar
+from typing import Callable, Dict, List, Optional, Type
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -220,7 +220,7 @@ class AdaptiveMetropolisHastings(MCMCAlgorithmBase):
                 - covariances[i]
             )
 
-        self.store = samples[1:]
+        self.store = samples
         self.acc = nacc / self.nits
 
 
@@ -444,10 +444,10 @@ class FisherAdaptiveLangevinMetropolisHastings(MetropolisAdjustedLangevinAlgorit
 
     def sample(
         self,
+        epsilon: float = 0.015,
         lambda_: float = 10.0,
         alpha_star: float = 0.574,
         n0: int = 500,
-        epsilon: float = 0.015,
     ) -> None:
         """
         Fisher adaptive MALA algorithm (FAMALA) with optimal preconditioning.
